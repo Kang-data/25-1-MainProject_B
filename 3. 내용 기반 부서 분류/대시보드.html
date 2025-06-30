@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>민원 관리 대시보드</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f1f3f5;
+    }
+    .container {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      gap: 20px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+    }
+    .sidebar {
+  flex: 0 0 220px;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+    .left {
+      flex: 2;
+      overflow-y: auto;
+    }
+    .right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    h2 {
+      margin-top: 0;
+      border-bottom: 2px solid #ced4da;
+      padding-bottom: 8px;
+    }
+    .complaint {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dee2e6;
+      cursor: pointer;
+    }
+    .dot {
+      font-size: 1.2em;
+      margin-right: 6px;
+    }
+    .complaint-time {
+      font-size: 0.9em;
+      color: #868e96;
+    }
+    .complaint-dept {
+      font-size: 0.95em;
+      font-weight: bold;
+      color: #495057;
+    }
+    .complaint-text {
+      margin: 6px 0;
+    }
+    .summary {
+      font-size: 0.9em;
+      color: #495057;
+      font-style: italic;
+    }
+    .group-tag {
+      font-size: 0.85em;
+      color: #1c7ed6;
+      margin-top: 5px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .weather-box {
+      background-color: #e3f2fd;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+    .weather-temp {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .weather-status {
+      font-size: 1em;
+      color: #1c7ed6;
+    }
+    .full-screen {
+      padding: 40px;
+    }
+    .full-screen .card {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    textarea {
+      font-family: inherit;
+    }
+    #calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+    line-height: 2;
+  }
+  .day-header {
+    color: black;
+  }
+  .day-header.sun { color: #fa5252; }
+  .day-header.sat { color: #228be6; }
+  .day.sun { color: #fa5252; }
+  .day.sat { color: #228be6; }
+  </style>
+</head>
+<body>
+  <div class="container" id="dashboard-container">
+<div class="sidebar">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <img src="영천시로고.png" alt="영천시 로고" style="width: 80px; height: auto; margin-bottom: 10px;" />
+    <div style="font-weight: bold;">영천시</div>
+  </div>
+
+  <div style="margin-bottom: 12px; text-align: center;">
+    <div style="font-weight: bold;">👤 관리자 로그인됨</div>
+    <div id="login-time" style="font-size: 0.85em; color: #495057;"></div>
+    <div id="session-expiry" style="font-size: 0.85em; color: #fa5252;"></div>
+  </div>
+
+  <div style="text-align: center; margin-bottom: 20px;">
+    <img src="프로필.jpg" alt="프로필 사진" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" />
+    <div style="font-size: 1em; font-weight: bold;">박윤서</div>
+    <div style="font-size: 0.9em; color: #495057;">환경보호과</div>
+  </div>
+  <div style="margin-bottom: 20px;">
+  <h3 style="font-size: 1em; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">내 부서 현황</h3>
+  <canvas id="urgencyChart" style="width:100%; height:160px;"></canvas>
+</div>
+
+<div style="text-align: center;">
+  <h3 style="font-size: 1em; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">JUNE</h3>
+  <div id="calendar"></div>
+</div>
+</div>
+    <div class="left card">
+      <h2>최근 접수된 민원</h2>
+<div class="complaint" data-id="11">
+  <div><span class="dot">🟨</span><span class="complaint-time">2025-06-08 09:30 접수</span></div>
+  <div class="complaint-dept">건설과</div>
+  <div class="complaint-text">버스승강장 설치 원함.</div>
+  <div class="summary">요약: 북안유상 1리 저수지 끝 교량 근처에 버스승강장 설치 요청</div>
+  <div class="group-tag">🌀 유사 민원 1건</div>
+</div>
+
+<div class="complaint" data-id="12">
+  <div><span class="dot">🟥</span><span class="complaint-time">2025-06-08 09:20 접수</span></div>
+  <div class="complaint-dept">복지정책과</div>
+  <div class="complaint-text">별빛나이트투어 문의</div>
+  <div class="summary">요약: 5월 시작 안내되어 있으나 신청 불가, 일정 유무 문의</div>
+  <div class="group-tag">🌀 유사 민원 없음</div>
+</div>
+
+<div class="complaint" data-id="3">
+  <div><span class="dot">🟨</span><span class="complaint-time">2025-05-29 13:00 접수</span></div>
+  <div class="complaint-dept">환경보호과</div>
+  <div class="complaint-text">쓰레기 수거가 제때 이루어지지 않고 있어요.</div>
+  <div class="summary">요약: 쓰레기 수거 지연 불편</div>
+  <div class="group-tag">🌀 유사 민원 2건</div>
+</div>
+
+<div class="complaint" data-id="13">
+  <div><span class="dot">🟦</span><span class="complaint-time">2025-06-08 09:10 접수</span></div>
+  <div class="complaint-dept">가족행복과</div>
+  <div class="complaint-text">너무 화가나요 ㅠㅠ 119 아이돌봄 이용하실 분들 꼭 좀 참고하시길 바래요!!</div>
+  <div class="summary">요약: 돌봄센터에서 기저귀 교체 미흡으로 인한 아동 건강 문제 발생</div>
+  <div class="group-tag">🌀 유사 민원 1건</div>
+</div>
+
+<div class="complaint" data-id="14">
+  <div><span class="dot">🟦</span><span class="complaint-time">2025-06-08 09:00 접수</span></div>
+  <div class="complaint-dept">건설과</div>
+  <div class="complaint-text">강변 황토길 걷고 싶은데 돌다리가 위험해요</div>
+  <div class="summary">요약: 황토길 내 돌다리 위험으로 인한 나무길 설치 요청</div>
+  <div class="group-tag">🌀 유사 민원 없음</div>
+</div>
+
+<div class="complaint" data-id="15">
+  <div><span class="dot">🟥</span><span class="complaint-time">2025-06-08 08:45 접수</span></div>
+  <div class="complaint-dept">교통행정과</div>
+  <div class="complaint-text">봄날센터 앞 위험해요</div>
+  <div class="summary">요약: 봄날센터 앞 차량 과속으로 아동 안전 위협</div>
+  <div class="group-tag">🌀 유사 민원 없음</div>
+</div>
+
+<div class="complaint" data-id="16">
+  <div><span class="dot">🟦</span><span class="complaint-time">2025-06-08 08:30 접수</span></div>
+  <div class="complaint-dept">사회복지과</div>
+  <div class="complaint-text">영천사랑상품권(카드) QR결재 도입 건의합니다.</div>
+  <div class="summary">요약: QR 결제 도입 및 수수료 0% 정책 도입 요청</div>
+  <div class="group-tag">🌀 유사 민원 1건</div>
+</div>
+
+<div class="complaint" data-id="17">
+  <div><span class="dot">🟨</span><span class="complaint-time">2025-06-08 08:15 접수</span></div>
+  <div class="complaint-dept">환경보호과</div>
+  <div class="complaint-text">파크골프 제한해주세요</div>
+  <div class="summary">요약: 자전거길에서의 파크골프 사용 제한 요청</div>
+  <div class="group-tag">🌀 유사 민원 없음</div>
+</div>
+
+<div class="complaint" data-id="18">
+  <div><span class="dot">🟥</span><span class="complaint-time">2025-06-08 08:00 접수</span></div>
+  <div class="complaint-dept">교통행정과</div>
+  <div class="complaint-text">횡단보도 보행시 시간늘려주세요</div>
+  <div class="summary">요약: 보행자용 신호 시간이 짧아 어르신 보행 곤란</div>
+  <div class="group-tag">🌀 유사 민원 2건</div>
+</div>
+
+<div class="complaint" data-id="19">
+  <div><span class="dot">🟨</span><span class="complaint-time">2025-06-08 07:45 접수</span></div>
+  <div class="complaint-dept">건설과</div>
+  <div class="complaint-text">정각삼거리 도로 반사경 기울어짐</div>
+  <div class="summary">요약: 반사경이 기울어져 제 기능 못함, 교체 요청</div>
+  <div class="group-tag">🌀 유사 민원 1건</div>
+</div>
+
+<div class="complaint" data-id="20">
+  <div><span class="dot">🟦</span><span class="complaint-time">2025-06-08 07:30 접수</span></div>
+  <div class="complaint-dept">도시게획과</div>
+  <div class="complaint-text">도시계획에 대하여 문의합니다.</div>
+  <div class="summary">요약: 영천시 도동 102-4번지 일원 도로 계획 문의</div>
+  <div class="group-tag">🌀 유사 민원 없음</div>
+</div>
+
+    </div>
+    <div class="right">
+      <div class="card weather-box">
+        <h2>오늘의 날씨</h2>
+        <div class="weather-temp">24℃</div>
+        <div class="weather-status">부분 흐림, 약한 바람</div>
+      </div>
+      <div class="card">
+        <h2>최근 이슈</h2>
+        <ul>
+          <li>영천 중심 동해선 철도 및 지역 균형발전 사업 추진</li>
+          <li>영천시 의회 중심 인구 감소 및 산업시설 확충 논의</li>
+        </ul>
+        <h2>예정된 일정</h2>
+        <ul>
+          <li>14:00 - 파크 골프 점검 (환경보호과)</li>
+          <li>15:30 - 강변 황토길 점검 (건설과)</li>
+        </ul>
+      </div>
+<div class="card">
+  <div style="display: flex; flex-direction: row; gap: 20px; justify-content: space-between;">
+
+    <div style="flex: 1; background-color: #f8f9fa; padding: 10px; border-radius: 6px;">
+      <h3 style="margin-top:0">📊 처리 통계</h3>
+      <canvas id="processChart" style="width:100%; height:180px;"></canvas>
+    </div>
+
+    <div style="flex: 1; background-color: #f8f9fa; padding: 10px; border-radius: 6px;">
+      <h3 style="margin-top:0">📊 미처리 민원</h3>
+      <canvas id="pendingChart" style="width:100%; max-height:180px;"></canvas>
+    </div>
+
+  </div>
+</div>
+  </div>
+</div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('handled_3') === 'true') {
+        const target = document.querySelector('.complaint[data-id="3"]');
+        if (target) target.remove();
+      }
+    });
+
+    const complaints = document.querySelectorAll('.complaint');
+    complaints.forEach(c => {
+      c.addEventListener('click', () => {
+        const id = c.getAttribute('data-id');
+        const content = c.querySelector('.complaint-text').textContent;
+        const group = c.querySelector('.group-tag')?.textContent || '유사 민원 없음';
+        window.currentComplaintId = id;
+
+        document.body.innerHTML = `
+          <div class="full-screen">
+            <div class="card">
+              <h2>민원 상세 처리</h2>
+              <p><strong>내용:</strong> ${content}</p>
+              <p><strong>${group}</strong></p>
+              <p><strong>응답자 이름:</strong> <span id="responder">박윤서</span></p>
+              <p><strong>처리 시각:</strong> <span id="timestamp">${new Date().toLocaleString()}</span></p>
+              <hr />
+              <label for="memo"><strong>처리 메모</strong></label><br />
+              <textarea id="memo" rows="10" style="width: 100%; margin-top: 10px;"></textarea><br />
+              <button onclick="refineMemo(event)" style="margin-top: 15px; padding: 8px 16px;">💡 다듬기</button>
+              <button onclick="submitMemo()" style="margin-top: 15px; padding: 8px 16px;">✅ 민원 처리 완료</button>
+              <button onclick="location.reload()" style="margin-top: 15px; margin-left: 10px;">↩️ 뒤로 가기</button>
+              ${id === '3' ? `
+              <div style="margin-top: 20px;">
+                <button onclick="showSimilarCases()">📂 유사 민원 과거 사례 보기</button>
+                <div id="similar-cases" style="margin-top: 15px;"></div>
+              </div>
+              ` : ``}
+            </div>
+          </div>
+        `;
+      });
+    });
+
+    function refineMemo(event) {
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = "⏳ 다듬는 중...";
+      button.disabled = true;
+
+      setTimeout(() => {
+        const refinedText = `
+쓰레기 수거로 인해 불편을 겪으신 점 진심으로 사과드립니다.
+
+말씀해주신 지역의 수거 지연 상황에 대해 확인한 결과, 최근 차량 정비 지연, 인력 부족 등으로 인해 평소보다 수거 일정이 다소 지연된 것으로 파악되었습니다.
+
+현재는 문제를 인지하고 즉시 수거가 진행될 수 있도록 조치를 취하였습니다.
+- 수거 일정 조정 및 보완 인력 투입
+- 수거 차량 GPS 모니터링 강화
+
+혹시 이후에도 수거가 누락되거나 지연되는 일이 발생한다면, 구체적인 위치(주소)와 날짜를 함께 알려주시면 더욱 신속하게 대응하겠습니다.
+
+깨끗하고 쾌적한 지역 환경을 위해 더욱 노력하겠습니다.
+소중한 의견 주셔서 진심으로 감사드립니다.
+        `.trim();
+
+        document.getElementById('memo').value = refinedText;
+        button.textContent = originalText;
+        button.disabled = false;
+      }, 1000);
+    }
+
+    function submitMemo() {
+      const memo = document.getElementById('memo').value.trim();
+      if (memo === '') {
+        alert('처리 메모를 입력해주세요.');
+        return;
+      }
+      alert('민원이 성공적으로 처리되었습니다.');
+
+      if (window.currentComplaintId === '3') {
+        sessionStorage.setItem('handled_3', 'true');
+      }
+
+      location.reload();
+    }
+
+    function showSimilarCases() {
+      const pastCases = [
+        {
+          date: "2025-04-18",
+          text: "수거일인데도 쓰레기가 그대로 쌓여 있습니다.",
+          response: "현장을 확인한 결과 수거 차량이 우천으로 일정이 지연되었으며, 금일 내로 수거 예정입니다."
+        },
+        {
+          date: "2025-03-05",
+          text: "쓰레기 수거가 며칠째 안되고 있어 악취가 납니다.",
+          response: "지연된 점 죄송합니다. 해당 지역 담당 부서에 전달하여 즉시 처리 요청하였습니다."
+        }
+      ];
+
+      let html = '<h3>📁 과거 유사 민원 처리 사례</h3>';
+      pastCases.forEach(c => {
+        html += `
+          <div style="margin-bottom: 12px; padding: 10px; border-left: 4px solid #1c7ed6; background: #f8f9fa;">
+            <p><strong>📅 ${c.date}</strong></p>
+            <p><em>민원 내용:</em> ${c.text}</p>
+            <p><em>답변 내용:</em><br />${c.response}</p>
+          </div>
+        `;
+      });
+
+      document.getElementById('similar-cases').innerHTML = html;
+    }
+  </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 📊 처리 통계 - 막대 + 평균시간 이중 축 그래프
+    const processCtx = document.getElementById('processChart').getContext('2d');
+    new Chart(processCtx, {
+      type: 'bar',
+      data: {
+        labels: ['완료', '접수', '시간'],
+        datasets: [
+          {
+            label: '건수',
+            data: [3, 12, null],
+            backgroundColor: ['#4dabf7', '#82c91e', '#e9ecef'],
+            yAxisID: 'y'
+          },
+          {
+            label: '평균 시간',
+            data: [null, null, 2.25],
+            backgroundColor: '#fab005',
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: '건' }
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            title: { display: true, text: '시간' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // 📊 미처리 민원 - 도넛 그래프
+    const pendingCtx = document.getElementById('pendingChart').getContext('2d');
+    new Chart(pendingCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['도로 파손', '쓰레기 수거', '야간 조명'],
+        datasets: [{
+          label: '미처리 민원',
+          data: [5, 4, 2],
+          backgroundColor: ['#ff6b6b', '#ffe066', '#748ffc'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+    // 부서 민원 긴급도 그래프
+const urgencyCtx = document.getElementById('urgencyChart').getContext('2d');
+new Chart(urgencyCtx, {
+  type: 'bar',
+  data: {
+    labels: ['높음', '보통', '낮음'],
+    datasets: [{
+      label: '건수',
+      data: [2, 1, 1],
+      backgroundColor: ['#fa5252', '#fab005', '#228be6']
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1 }
+      }
+    }
+  }
+});
+
+  });
+</script>
+<script>
+  // 로그인 시간 표시
+  const loginTime = new Date();
+  const formattedTime = loginTime.toLocaleTimeString();
+  document.getElementById('login-time').textContent = `로그인 시각: ${formattedTime}`;
+
+  // 세션 만료 타이머: 2시간 → 1초씩 감소
+  let remainingSeconds = 2 * 60 * 60;
+  const sessionText = document.getElementById('session-expiry');
+
+  function updateSession() {
+    const h = String(Math.floor(remainingSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((remainingSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(remainingSeconds % 60).padStart(2, '0');
+    sessionText.textContent = `세션 만료까지: ${h}:${m}:${s}`;
+    if (remainingSeconds > 0) remainingSeconds--;
+  }
+
+  updateSession();
+  setInterval(updateSession, 1000);
+</script>
+<script>
+ function generateStyledCalendar(year, month) {
+  const calendarDiv = document.getElementById('calendar');
+  calendarDiv.innerHTML = '';
+
+  const headers = ['일', '월', '화', '수', '목', '금', '토'];
+  headers.forEach((h, i) => {
+    const span = document.createElement('div');
+    span.className = `day-header ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}`;
+    span.textContent = h;
+    calendarDiv.appendChild(span);
+  });
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement('div');
+    calendarDiv.appendChild(empty);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const span = document.createElement('div');
+    const weekday = (firstDay + day - 1) % 7;
+    let className = 'day';
+
+    if (weekday === 0) className += ' sun';
+    else if (weekday === 6) className += ' sat';
+
+    // 👉 6월 3일, 6월 6일을 빨간색 처리
+    if (month === 5 && (day === 3 || day === 6)) {
+      className += ' sun';
+    }
+
+    span.className = className;
+    span.textContent = day;
+    calendarDiv.appendChild(span);
+  }
+}
+  const today = new Date();
+  generateStyledCalendar(today.getFullYear(), today.getMonth());
+</script>
+</body>
+</html>
